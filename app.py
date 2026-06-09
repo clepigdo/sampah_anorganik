@@ -446,7 +446,7 @@ def predict_image(img_pil, model, backend, threshold):
     arr = preprocess_input(arr)
     arr = np.expand_dims(arr, 0)
 
-    # 🚀 --- MENGGUNAKAN INFERENCE SAVEDMODEL (BUKAN .PREDICT) ---
+    # 🚀 --- MENGGUNAKAN INFERENCE SAVEDMODEL ---
     infer = model.signatures["serving_default"]
     
     # Eksekusi prediksi
@@ -455,46 +455,12 @@ def predict_image(img_pil, model, backend, threshold):
     # Mengekstrak array probabilitas dari output
     output_key = list(preds_dict.keys())[0]
     preds = preds_dict[output_key].numpy()[0]
-    # -------------------------------------------------------------
+    # -------------------------------------------
 
     idx = int(np.argmax(preds))
     conf = float(preds[idx])
 
     CLASS_NAMES_MODEL = sorted(CLASS_INFO.keys()) 
-    all_probs = dict(zip(CLASS_NAMES_MODEL, preds.tolist()))
-
-    if conf < threshold:
-        return "Tidak Teridentifikasi", conf, all_probs
-    return CLASS_NAMES_MODEL[idx], conf, all_probs
-
-def predict_image(img_pil, model, backend, threshold):
-    """Prediksi gambar, kembalikan (predicted_class, confidence, all_probs)."""
-    from tensorflow.keras.applications.densenet import preprocess_input
-    import tensorflow as tf
-
-    CLASS_NAMES = sorted(CLASS_INFO.keys())
-
-    if backend == "mock":
-        # Mock untuk demo tanpa model
-        time.sleep(0.8)
-        probs = np.random.dirichlet(np.ones(len(CLASS_NAMES)) * 0.5)
-        idx = np.argmax(probs)
-        conf = float(probs[idx])
-        if conf < threshold:
-            return "Tidak Teridentifikasi", conf, dict(zip(CLASS_NAMES, probs.tolist()))
-        return CLASS_NAMES[idx], conf, dict(zip(CLASS_NAMES, probs.tolist()))
-
-    # TF inference
-    img = img_pil.resize((224, 224)).convert("RGB")
-    arr = np.array(img, dtype=np.float32)
-    arr = preprocess_input(arr)
-    arr = np.expand_dims(arr, 0)
-
-    preds = model.predict(arr, verbose=0)[0]
-    idx = int(np.argmax(preds))
-    conf = float(preds[idx])
-
-    CLASS_NAMES_MODEL = sorted(CLASS_INFO.keys())  # harus sama urutan saat training
     all_probs = dict(zip(CLASS_NAMES_MODEL, preds.tolist()))
 
     if conf < threshold:
