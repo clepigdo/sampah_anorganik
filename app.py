@@ -403,6 +403,9 @@ CONFIDENCE_THRESHOLD = 0.65  # default
 def load_model():
     """Load model TF/Keras. Fallback ke mock jika belum ada."""
     try:
+        import os
+        os.environ['TF_USE_LEGACY_KERAS'] = '1'
+        
         import tensorflow as tf
         for path in [
             "best_fold1_phase2.keras",
