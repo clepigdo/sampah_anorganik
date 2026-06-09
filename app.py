@@ -491,7 +491,7 @@ def main():
     with col2:
         st.markdown("""
         <div class="metric-card">
-            <div class="metric-number">95%</div>
+            <div class="metric-number">91%</div>
             <div class="metric-label">Akurasi Model</div>
         </div>
         """, unsafe_allow_html=True)
