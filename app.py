@@ -405,7 +405,7 @@ def load_model():
     try:
         import tensorflow as tf
         for path in [
-            "model_anorganik_terbaik.h5",
+            "best_fold1_phase2.keras",
         ]:
             if os.path.exists(path):
                 model = tf.keras.models.load_model(path, compile=False)
