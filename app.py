@@ -399,22 +399,24 @@ CONFIDENCE_THRESHOLD = 0.65  # default
 
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
-@st.cache_resource(show_spinner=False)
 def load_model():
     """Load model TF/Keras. Fallback ke mock jika belum ada."""
     try:
-        import os
-        os.environ['TF_USE_LEGACY_KERAS'] = '1'
-        
         import tensorflow as tf
-        for path in [
-            "best_fold1_phase2.keras",
-        ]:
-            if os.path.exists(path):
-                model = tf.keras.models.load_model(path, compile=False)
-                return model, "tensorflow"
-        return None, "mock"
-    except ImportError:
+        import os
+        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, "best_fold1_phase2.keras")
+        
+        if os.path.exists(model_path):
+            model = tf.keras.models.load_model(model_path, compile=False)
+            return model, "tensorflow"
+        else:
+            st.warning(f"File model tidak ditemukan di path: {model_path}")
+            return None, "mock"
+            
+    except Exception as e:
+        st.error(f"🚨 Gagal memuat model: {e}")
         return None, "mock"
 
 def predict_image(img_pil, model, backend, threshold):
