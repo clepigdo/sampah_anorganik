@@ -403,13 +403,24 @@ def load_model():
     """Load model TF/Keras. Fallback ke mock jika belum ada."""
     try:
         import tensorflow as tf
+        from tensorflow.keras.layers import Dense
         import os
-        
+
+        class SafeDense(Dense):
+            def __init__(self, **kwargs):
+                kwargs.pop('quantization_config', None)
+                super().__init__(**kwargs)
+
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, "best_fold1_phase2.keras")
         
         if os.path.exists(model_path):
-            model = tf.keras.models.load_model(model_path, compile=False)
+            # Masukkan SafeDense ke dalam custom_objects
+            model = tf.keras.models.load_model(
+                model_path, 
+                custom_objects={'Dense': SafeDense}, 
+                compile=False
+            )
             return model, "tensorflow"
         else:
             st.warning(f"File model tidak ditemukan di path: {model_path}")
