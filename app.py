@@ -399,16 +399,16 @@ CONFIDENCE_THRESHOLD = 0.65  # default
 
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_model():
     """Load model TF/Keras. Fallback ke mock jika belum ada."""
     try:
         import tensorflow as tf
-        # Coba load dari berbagai format
         for path in [
             "best_fold1_phase2.keras",
         ]:
             if os.path.exists(path):
-                model = tf.keras.models.load_model(path)
+                model = tf.keras.models.load_model(path, compile=False)
                 return model, "tensorflow"
         return None, "mock"
     except ImportError:
