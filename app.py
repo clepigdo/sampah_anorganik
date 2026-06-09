@@ -426,6 +426,7 @@ def predict_image(img_pil, model, backend, threshold):
     """Prediksi gambar menggunakan model inference murni."""
     from tensorflow.keras.applications.densenet import preprocess_input
     import tensorflow as tf
+    import numpy as np
     import time
 
     CLASS_NAMES = sorted(CLASS_INFO.keys())
@@ -445,7 +446,7 @@ def predict_image(img_pil, model, backend, threshold):
     arr = preprocess_input(arr)
     arr = np.expand_dims(arr, 0)
 
-    # Memanggil signature default dari folder hasil export
+    # 🚀 --- MENGGUNAKAN INFERENCE SAVEDMODEL (BUKAN .PREDICT) ---
     infer = model.signatures["serving_default"]
     
     # Eksekusi prediksi
@@ -454,6 +455,7 @@ def predict_image(img_pil, model, backend, threshold):
     # Mengekstrak array probabilitas dari output
     output_key = list(preds_dict.keys())[0]
     preds = preds_dict[output_key].numpy()[0]
+    # -------------------------------------------------------------
 
     idx = int(np.argmax(preds))
     conf = float(preds[idx])
