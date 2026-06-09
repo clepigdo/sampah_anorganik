@@ -399,36 +399,71 @@ CONFIDENCE_THRESHOLD = 0.65  # default
 
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_model():
-    """Load model TF/Keras. Fallback ke mock jika belum ada."""
+    """Load model TF SavedModel. Bypass Keras version issues."""
     try:
         import tensorflow as tf
-        from tensorflow.keras.layers import Dense
         import os
-
-        class SafeDense(Dense):
-            def __init__(self, **kwargs):
-                kwargs.pop('quantization_config', None)
-                super().__init__(**kwargs)
-
+        
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, "best_fold1_phase2.keras")
+        # Menunjuk langsung ke NAMA FOLDER hasil export
+        model_path = os.path.join(current_dir, "sampah_model_export")
         
         if os.path.exists(model_path):
-            # Masukkan SafeDense ke dalam custom_objects
-            model = tf.keras.models.load_model(
-                model_path, 
-                custom_objects={'Dense': SafeDense}, 
-                compile=False
-            )
+            # Memuat graf komputasi murni tanpa campur tangan Keras
+            model = tf.saved_model.load(model_path)
             return model, "tensorflow"
         else:
-            st.warning(f"File model tidak ditemukan di path: {model_path}")
+            st.warning(f"Folder model tidak ditemukan di: {model_path}")
             return None, "mock"
             
     except Exception as e:
         st.error(f"🚨 Gagal memuat model: {e}")
         return None, "mock"
+
+def predict_image(img_pil, model, backend, threshold):
+    """Prediksi gambar menggunakan model inference murni."""
+    from tensorflow.keras.applications.densenet import preprocess_input
+    import tensorflow as tf
+    import time
+
+    CLASS_NAMES = sorted(CLASS_INFO.keys())
+
+    if backend == "mock":
+        time.sleep(0.8)
+        probs = np.random.dirichlet(np.ones(len(CLASS_NAMES)) * 0.5)
+        idx = np.argmax(probs)
+        conf = float(probs[idx])
+        if conf < threshold:
+            return "Tidak Teridentifikasi", conf, dict(zip(CLASS_NAMES, probs.tolist()))
+        return CLASS_NAMES[idx], conf, dict(zip(CLASS_NAMES, probs.tolist()))
+
+    # Preprocessing gambar
+    img = img_pil.resize((224, 224)).convert("RGB")
+    arr = np.array(img, dtype=np.float32)
+    arr = preprocess_input(arr)
+    arr = np.expand_dims(arr, 0)
+
+    # Memanggil signature default dari folder hasil export
+    infer = model.signatures["serving_default"]
+    
+    # Eksekusi prediksi
+    preds_dict = infer(tf.constant(arr))
+    
+    # Mengekstrak array probabilitas dari output
+    output_key = list(preds_dict.keys())[0]
+    preds = preds_dict[output_key].numpy()[0]
+
+    idx = int(np.argmax(preds))
+    conf = float(preds[idx])
+
+    CLASS_NAMES_MODEL = sorted(CLASS_INFO.keys()) 
+    all_probs = dict(zip(CLASS_NAMES_MODEL, preds.tolist()))
+
+    if conf < threshold:
+        return "Tidak Teridentifikasi", conf, all_probs
+    return CLASS_NAMES_MODEL[idx], conf, all_probs
 
 def predict_image(img_pil, model, backend, threshold):
     """Prediksi gambar, kembalikan (predicted_class, confidence, all_probs)."""
