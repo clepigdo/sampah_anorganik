@@ -269,17 +269,30 @@ TEAM = [("IR","Igdo Ragil Manuel","av1"),("F","Firnanda","av2"),("I","Ihda","av3
 
 @st.cache_resource(show_spinner=False)
 @st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_model():
     try:
         import tensorflow as tf
+        import os
+        
+        # 🔥 TRIK KHUSUS: Kelas pencegat untuk membuang parameter yang bikin error
+        class SafeDense(tf.keras.layers.Dense):
+            def __init__(self, **kwargs):
+                kwargs.pop('quantization_config', None)
+                super().__init__(**kwargs)
+
         here = os.path.dirname(os.path.abspath(__file__))
         for name in ["model_densenet121_anorganik_best.h5"]:
             p = os.path.join(here, name)
             if os.path.exists(p):
-                return tf.keras.models.load_model(p, compile=False), "tensorflow"
+                # Memuat model dengan menyisipkan SafeDense ke dalam custom_objects
+                return tf.keras.models.load_model(
+                    p, 
+                    custom_objects={'Dense': SafeDense}, 
+                    compile=False
+                ), "tensorflow"
         return None, "mock"
     except Exception as e:
-        # 🔥 TAMPILKAN ERROR-NYA DI SINI 🔥
         st.error(f"Sistem gagal memuat model AI: {e}") 
         return None, "mock"
 
