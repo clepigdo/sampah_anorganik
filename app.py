@@ -268,6 +268,7 @@ THRESHOLD = 0.65
 TEAM = [("IR","Igdo Ragil Manuel","av1"),("F","Firnanda","av2"),("I","Ihda","av3"),("G","Goklas","av4")]
 
 @st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_model():
     try:
         import tensorflow as tf
@@ -278,6 +279,8 @@ def load_model():
                 return tf.keras.models.load_model(p, compile=False), "tensorflow"
         return None, "mock"
     except Exception as e:
+        # 🔥 TAMPILKAN ERROR-NYA DI SINI 🔥
+        st.error(f"Sistem gagal memuat model AI: {e}") 
         return None, "mock"
 
 def predict(img_pil, model, backend, threshold):
