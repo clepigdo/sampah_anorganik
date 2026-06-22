@@ -273,7 +273,7 @@ def load_model():
     try:
         import tensorflow as tf
         here = os.path.dirname(os.path.abspath(__file__))
-        for name in ["model_densenet121_anorganik_best.keras","model_densenet121_anorganik_best.h5"]:
+        for name in ["model_densenet121_anorganik_best.h5"]:
             p = os.path.join(here, name)
             if os.path.exists(p):
                 return tf.keras.models.load_model(p, compile=False), "tensorflow"
